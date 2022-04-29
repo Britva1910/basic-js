@@ -20,57 +20,62 @@ const { NotImplementedError } = require('../extensions/index.js');
  * 
  */
 class VigenereCipheringMachine {
-    constructor(flexMachine) {
-        this.machine = (flexMachine === false);
-        this.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    constructor(isDirect = true) {
+        this.machine = !isDirect;
+        this.alphabetLength = 26;
+        this.codeLetterA = 'A'.charCodeAt(0);
     }
 
     encrypt(message, key) {
-        let kf = Math.ceil(message.length / key.length);
-        key = key.repeat(kf);
 
-        const codeLetterA = 'A'.charCodeAt(0);
-        const alfabetCout = 26;
-
-        let res = [];
-
-        for (let i = 0; i < message.length; i++) {
-            if (test[i] === ' ') {
-                res.push(message[i]);
-            } else {
-                let letterInd = message.charCodeAt(i) - codeLetterA;
-                let shift = key.charCodeAt(i) - codeLetterA;
-
-                res.push(
-                    String.fromCharCode(codeLetterA + (letterInd + shift) % alfabetCout)
-                );
-            }
+        if (message === undefined || key === undefined) {
+            throw new Error('Incorrect arguments!')
         }
-        return res.join('');
+        let kf = Math.ceil(message.length / key.length);
+        key = key.repeat(kf).toUpperCase();
+        message = message.toUpperCase();
+
+        let result = [];
+        let spaseCounter = 0;
+        for (let i = 0; i < message.length; i++) {
+            if (!/[A-Z]/.test(message[i])) {
+                result.push(message[i]);
+                spaseCounter += 1;
+            } else {
+                const currentLetterIndex = message.charCodeAt(i) - this.codeLetterA;
+                const shift = key.charCodeAt(i - spaseCounter) - this.codeLetterA;
+                result.push(String.fromCharCode(this.codeLetterA + (currentLetterIndex + shift) % this.alphabetLength))
+            }
+
+        }
+        if (this.machine === true) return result.reverse().join('');
+        return result.join('');
     }
 
     decrypt(message, key) {
+        if (message === undefined || key === undefined) {
+            throw new Error('Incorrect arguments!')
+        }
         let kf = Math.ceil(message.length / key.length);
-        key = key.repeat(kf);
+        key = key.repeat(kf).toUpperCase();
+        message = message.toUpperCase();
 
-        const codeLetterA = 'A'.charCodeAt(0);
-        const alfabetCout = 26;
-
-        let res = [];
-
+        let result = [];
+        let spaseCounter = 0;
         for (let i = 0; i < message.length; i++) {
-            if (test[i] === ' ') {
-                res.push(message[i]);
+            if (!/[A-Z]/.test(message[i])) {
+                result.push(message[i]);
+                spaseCounter += 1;
             } else {
-                let letterInd = message.charCodeAt(i) - codeLetterA;
-                let shift = key.charCodeAt(i) - codeLetterA;
-
-                res.push(
-                    String.fromCharCode(codeLetterA - (letterInd + shift) % alfabetCout)
-                );
+                const currentLetterIndex = message.charCodeAt(i) - this.codeLetterA;
+                const shift = key.charCodeAt(i - spaseCounter) - this.codeLetterA;
+                result.push(String.fromCharCode(this.codeLetterA + (currentLetterIndex - shift + this.alphabetLength) % this.alphabetLength))
             }
         }
-        return res.join('');
+        if (this.machine === true) {
+            return result.reverse().join('')
+        };
+        return result.join('');
     }
 }
 
